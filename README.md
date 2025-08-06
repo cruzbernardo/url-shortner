@@ -1,98 +1,125 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# Projeto NestJS com Docker — Guia para Rodar e Escalar
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Variáveis de Ambiente
 
-## Description
+O projeto utiliza um arquivo `.env` para configurar diversas opções importantes, tais como:
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+| Variável                | Descrição                                              | Exemplo                        |
+|------------------------|--------------------------------------------------------|-------------------------------|
+| `PORT`                 | Porta onde a API NestJS será exposta                   | `3000`                        |
+| `NODE_ENV`             | Ambiente da aplicação (ex: local, development, production) | `local`                       |
+| `DATABASE_CONNECTION`  | Tipo de banco de dados (usamos postgres)               | `postgres`                    |
+| `DATABASE_HOST`        | Host do banco de dados (no Docker, o serviço `db`)     | `db`                          |
+| `DATABASE_PORT`        | Porta do banco (geralmente 5432 para postgres)         | `5432`                        |
+| `DATABASE_USERNAME`    | Usuário do banco                                        | `postgres`                    |
+| `DATABASE_PASSWORD`    | Senha do banco                                         | `postgres`                    |
+| `DATABASE_NAME`        | Nome do banco                                         | `myapp`                       |
+| `DATABASE_SCHEMA`      | Schema do banco de dados                               | `public`                      |
+| `TYPEORM_MIGRATIONS`   | Caminho para os arquivos de migração do TypeORM        | `dist/database/migrations/*.js` |
+| `TYPEORM_SYNCHRONIZE`  | Habilita sincronização automática do schema (true/false) | `true`                        |
+| `TYPEORM_MIGRATIONS_RUN`| Controla execução automática das migrations (true/false) | `true`                        |
+| `ALGORITHM`            | Algoritmo de criptografia usado                         | `aes-256-cbc`                 |
+| `ENCRYPT_SECRET_KEY`   | Chave secreta para criptografia (deve ser segura)      | `3e8bf28781e2982f...`         |
+| `ENCRYPT_IV`           | Vetor de inicialização para criptografia                | `69c8e8c9f3cac123d397d4d9...`|
+| `JWT_SECRET`           | Chave secreta para assinatura JWT                       | `5dfbe3e018d1b2ab0...`        |
+| `JWT_EXPIRATION_TIME`  | Tempo de expiração do token JWT                          | `3h`                          |
+| `SHORT_URL_CHAR_SIZE`  | Tamanho dos códigos gerados para URLs encurtadas        | `6`                           |
 
-## Project setup
+> **Importante:** Nunca compartilhe seu `.env` real com chaves secretas ou senhas. Utilize o `.env.example` como modelo para criação.
 
-```bash
-$ npm install
-```
+---
 
-## Compile and run the project
+## Como executar o projeto localmente
 
-```bash
-# development
-$ npm run start
+### Pré-requisitos
 
-# watch mode
-$ npm run start:dev
+- Docker e Docker Compose instalados na máquina.
+- Node.js e npm (opcional, para rodar fora do Docker).
 
-# production mode
-$ npm run start:prod
-```
+### Passos para rodar via Docker
 
-## Run tests
+1. Copie o arquivo de exemplo e configure seu `.env`:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cp .env.example .env
+# Edite o .env para adicionar suas configurações reais
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+2. Build e start dos containers:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker-compose up --build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+3. Acesse a aplicação em:
 
-## Resources
+[http://localhost:3000](http://localhost:3000)
 
-Check out a few resources that may come in handy when working with NestJS:
+---
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Estrutura do Docker Compose
 
-## Support
+- Serviço **api**: container que roda a aplicação NestJS em modo de desenvolvimento (`npm run start:dev`), mapeando a porta 3000.
+- Serviço **db**: container com PostgreSQL versão 15, porta exposta `4432` no host, conectada internamente à porta `5432`.
+- Volume **postgres-data**: para persistência dos dados do banco.
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+---
 
-## Stay in touch
+## Dockerfile
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Usa imagem oficial `node:20`.
+- Instala dependências com cache via `package*.json`.
+- Copia o projeto e expõe a porta 3000.
+- Roda o NestJS em modo desenvolvimento.
 
-## License
+## Logging com Winston e rastreabilidade
+- Neste projeto, foi adicionado o Winston como biblioteca de logging para capturar logs estruturados e detalhados.
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- Recursos importantes implementados:
+  -Inclusão de traceId em cada log para rastrear requisições distribuídas e identificar o fluxo completo de uma operação em múltiplas instâncias.
+
+  -Captura do endereço IP do cliente para identificar origem da requisição.
+
+  -Configuração para integrar com sistemas de monitoramento e análise de logs.
+
+
+
+---
+
+## Desafios e Considerações para Escalabilidade Horizontal
+
+Ao rodar múltiplas instâncias da API para distribuir carga (escalar horizontalmente), alguns desafios surgem:
+
+### 1. Conexões simultâneas ao banco de dados
+
+- O banco deve suportar múltiplas conexões simultâneas.
+- Configuração do pool de conexões deve ser otimizada.
+- Possível uso de proxy de conexão (PgBouncer) para melhor performance.
+
+### 2. Estado da aplicação
+
+- Evitar armazenar estado em memória local da instância.
+- Usar serviços externos para sessões e cache, ex: Redis.
+
+### 3. Consistência e concorrência
+
+- Garantir idempotência em operações.
+- Usar transações e locks para evitar conflitos.
+
+### 4. Logs e monitoramento
+
+- Logs precisam ser centralizados para facilitar análise.
+- Ferramentas recomendadas: ELK Stack, Loki, Grafana.
+
+### 5. Balanceamento de carga
+
+- Usar load balancers para distribuir requisições.
+- Configurar health checks para detectar instâncias não saudáveis.
+
+### 6. Deploy contínuo
+
+- Deploys coordenados para evitar downtime.
+- Técnicas: rolling updates, blue-green deploy.
+
+---
