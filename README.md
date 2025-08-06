@@ -77,13 +77,11 @@ docker-compose up --build
 - Neste projeto, foi adicionado o Winston como biblioteca de logging para capturar logs estruturados e detalhados.
 
 - Recursos importantes implementados:
-  -Inclusão de traceId em cada log para rastrear requisições distribuídas e identificar o fluxo completo de uma operação em múltiplas instâncias.
+  - Inclusão de traceId em cada log para rastrear requisições distribuídas e identificar o fluxo completo de uma operação em múltiplas instâncias.
 
-  -Captura do endereço IP do cliente para identificar origem da requisição.
+  - Captura do endereço IP do cliente para identificar origem da requisição.
 
-  -Configuração para integrar com sistemas de monitoramento e análise de logs.
-
-
+  - Configuração para integrar com sistemas de monitoramento e análise de logs.
 
 ---
 
@@ -109,8 +107,7 @@ Ao rodar múltiplas instâncias da API para distribuir carga (escalar horizontal
 
 ### 4. Logs e monitoramento
 
-- Logs precisam ser centralizados para facilitar análise.
-- Ferramentas recomendadas: ELK Stack, Loki, Grafana.
+- Aplicação de Ferramentas de monitoramento: ELK Stack, Loki, Grafana.
 
 ### 5. Balanceamento de carga
 
