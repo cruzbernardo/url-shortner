@@ -15,7 +15,7 @@ import { SignIn } from './interfaces';
 import { RequestSignInModel } from './models';
 
 import type { PartialUser, UserRequestWithData } from 'src/shared/interfaces';
-import { RegisterUserModel } from 'src/users/http/models';
+import { RegisterUserModel } from 'src/modules/users/http/models';
 import { Logger } from 'winston';
 
 @ApiTags('Authentication')

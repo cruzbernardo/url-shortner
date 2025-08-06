@@ -8,8 +8,8 @@ import { PartialUser } from 'src/shared/interfaces';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { IEnvironmentVariables } from 'src/config/enviorment-config.validation';
-import { UsersService } from 'src/users/domain/users.service';
-import { RequestRegisterUser } from 'src/users/http/interfaces';
+import { UsersService } from 'src/modules/users/domain/users.service';
+import { RequestRegisterUser } from 'src/modules/users/http/interfaces';
 import { Logger } from 'winston';
 
 @Injectable()

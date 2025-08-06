@@ -5,7 +5,7 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { SignInModel } from 'src/authentication/http/models';
+import { SignInModel } from 'src/modules/authentication/http/models';
 import { ExceptionModel, HttpExceptionModel } from 'src/shared/exceptions';
 import { GetUserModel } from '../models';
 

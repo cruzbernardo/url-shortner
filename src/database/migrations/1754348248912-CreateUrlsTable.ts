@@ -22,6 +22,7 @@ export class CreateUrlsTable1754348248912 implements MigrationInterface {
           {
             name: 'url',
             type: 'varchar',
+            isUnique: true,
             isNullable: false,
           },
           {
