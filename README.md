@@ -114,9 +114,4 @@ Ao rodar múltiplas instâncias da API para distribuir carga (escalar horizontal
 - Usar load balancers para distribuir requisições.
 - Configurar health checks para detectar instâncias não saudáveis.
 
-### 6. Deploy contínuo
-
-- Deploys coordenados para evitar downtime.
-- Técnicas: rolling updates, blue-green deploy.
-
 ---
