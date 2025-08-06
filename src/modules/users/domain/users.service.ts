@@ -20,7 +20,7 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
 
     @Inject('winston')
-    private readonly logger: Logger, // ⬅ Winston logger com traceId
+    private readonly logger: Logger,
   ) {}
 
   async register(

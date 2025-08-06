@@ -11,7 +11,7 @@ export class EncryptionService {
     private readonly configService: ConfigService<IEnvironmentVariables>,
 
     @Inject('winston')
-    private readonly logger: Logger, // Winston logger injetado
+    private readonly logger: Logger,
   ) {
     this.logger.info('Initializing Encryption service', {
       context: EncryptionService.name,

@@ -31,7 +31,7 @@ export class AuthenticationService {
     private readonly jwt: JwtService,
 
     @Inject('winston')
-    private readonly logger: Logger, // ⬅ Winston logger
+    private readonly logger: Logger,
   ) {
     this.JWT_SECRET = this.configService.getOrThrow('JWT_SECRET', {
       infer: true,

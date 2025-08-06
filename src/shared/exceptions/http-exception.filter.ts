@@ -14,7 +14,7 @@ import { Logger } from 'winston';
 export class HttpExceptionFilter implements ExceptionFilter {
   constructor(
     @Inject('winston')
-    private readonly logger: Logger, // ⬅ Winston com traceId via CLS
+    private readonly logger: Logger,
   ) {}
 
   catch(exception: any, host: ArgumentsHost) {

@@ -1,5 +1,3 @@
-// src/logging/logging.module.ts
-
 import { Module, Global } from '@nestjs/common';
 import { instance } from 'src/config/winston-logger';
 
