@@ -10,5 +10,5 @@ export interface ResponseGetUserWithoutPassword {
   name: string;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt: Date;
+  deletedAt?: Date;
 }

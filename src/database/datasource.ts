@@ -13,6 +13,10 @@ const configModule = ConfigModule.forRoot({
 const configService = new ConfigService();
 const typeOrmConfigService = new TypeOrmConfigService(configService);
 
-export const AppDataSource = new DataSource(
-  typeOrmConfigService.createTypeOrmOptions() as any,
-);
+const options = typeOrmConfigService.createTypeOrmOptions() as any;
+
+// Use glob pattern for migrations - TypeORM will resolve this automatically
+export const AppDataSource = new DataSource({
+  ...options,
+  migrations: [__dirname + '/migrations/*.{js,ts}'],
+});

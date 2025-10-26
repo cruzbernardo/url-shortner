@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Inject, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { GetUserDocs } from './docs/user.docs';
 import { UsersService } from '../domain/users.service';
 import { RegisterUserModel } from './models';
@@ -34,7 +42,9 @@ export class UsersController {
 
   @Get(':id')
   @GetUserDocs()
-  async get(@Param('id') id: string): Promise<ResponseGetUserWithoutPassword> {
+  async get(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 400 })) id: string,
+  ): Promise<ResponseGetUserWithoutPassword> {
     this.logger.info(`Get user request for id: ${id}`, {
       context: UsersController.name,
     });

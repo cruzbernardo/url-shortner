@@ -54,11 +54,11 @@ export class UrlsService {
     });
 
     const shortCode = await this.generateRandomShortUrl(data.origin);
-    const shortUrl = `${baseUrl}/${shortCode}`;
+    const shortUrl = `${baseUrl}/r/${shortCode}`;
 
     const url = this.urlRepository.create({
       origin: data.origin,
-      url: shortUrl,
+      shortCode,
       user: { id: userId } as User,
     });
 
@@ -68,8 +68,8 @@ export class UrlsService {
         context: UrlsService.name,
       },
     );
-
-    return userId ? await this.urlRepository.save(url) : url;
+    url.url = shortUrl;
+    return await this.urlRepository.save(url);
   }
 
   async getById(id: string, userId: string): Promise<ResponseGetUrl> {
@@ -98,25 +98,26 @@ export class UrlsService {
     return found;
   }
 
-  async getByUrl(shortUrl: string): Promise<string> {
-    this.logger.debug(`Fetching original URL for short URL: ${shortUrl}`, {
+  async getByShortCode(shortCode: string): Promise<string> {
+    this.logger.debug(`Fetching original URL for short URL: ${shortCode}`, {
       context: UrlsService.name,
     });
 
-    const url = await this.urlRepository.findOne({ where: { url: shortUrl } });
+    const url = await this.urlRepository.findOne({
+      where: { shortCode: shortCode },
+    });
 
     if (!url) {
-      this.logger.warn(`Short URL not found: ${shortUrl}`, {
+      this.logger.warn(`Short URL not found: ${shortCode}`, {
         context: UrlsService.name,
       });
       throw new NotFoundException('Short URL not found');
     }
 
-    url.count += 1;
-    await this.urlRepository.save(url);
+    await this.urlRepository.increment({ shortCode }, 'count', 1);
 
     this.logger.info(
-      `Redirecting short URL ${shortUrl} to origin ${url.origin}. Count incremented to ${url.count}`,
+      `Redirecting short URL ${shortCode} to origin ${url.origin}. Count incremented to ${url.count}`,
       { context: UrlsService.name },
     );
 
@@ -188,7 +189,7 @@ export class UrlsService {
       );
 
       const shortCode = await this.generateRandomShortUrl(data.origin);
-      const shortUrl = `${baseUrl}/${shortCode}`;
+      const shortUrl = `${baseUrl}/r/${shortCode}`;
       data.url = shortUrl;
     }
 
@@ -238,7 +239,7 @@ export class UrlsService {
       const candidate = hash.substring(i, i + sliceLength);
 
       const exists = await this.urlRepository.findOne({
-        where: { url: candidate },
+        where: { shortCode: candidate },
       });
 
       if (!exists) {

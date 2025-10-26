@@ -16,8 +16,8 @@ export class Url {
   @Column()
   origin: string;
 
-  @Column()
-  url: string;
+  @Column({ name: 'short_code' })
+  shortCode: string;
 
   @Column({ default: 0 })
   count: number;
@@ -34,4 +34,6 @@ export class Url {
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date;
+
+  url: string;
 }

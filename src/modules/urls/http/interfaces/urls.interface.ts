@@ -13,6 +13,7 @@ export interface RequestUpdateUrl {
 export interface ResponseGetUrl {
   id: string;
   origin?: string;
+  shortCode?: string;
   url?: string;
   count?: number;
   createdAt: Date;
