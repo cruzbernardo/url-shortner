@@ -7,6 +7,7 @@ export interface RequestRegisterUrl {
 export interface RequestUpdateUrl {
   origin?: string;
   url?: string;
+  shortCode?: string;
   count?: number;
 }
 

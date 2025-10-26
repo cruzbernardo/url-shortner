@@ -59,7 +59,7 @@ export class UrlsService {
     const url = this.urlRepository.create({
       origin: data.origin,
       shortCode,
-      user: { id: userId } as User,
+      ...(userId && { user: { id: userId } as User }),
     });
 
     this.logger.info(
@@ -68,8 +68,10 @@ export class UrlsService {
         context: UrlsService.name,
       },
     );
-    url.url = shortUrl;
-    return await this.urlRepository.save(url);
+
+    const saved = (await this.urlRepository.save(url)) as Url;
+    saved.url = shortUrl;
+    return saved;
   }
 
   async getById(id: string, userId: string): Promise<ResponseGetUrl> {
@@ -182,6 +184,7 @@ export class UrlsService {
 
     const url = await this.getById(id, userId);
 
+    let newShortUrl: string | undefined;
     if (data.origin && data.origin !== url.origin) {
       this.logger.info(
         `Origin changed from ${url.origin} to ${data.origin}, regenerating short URL`,
@@ -189,8 +192,8 @@ export class UrlsService {
       );
 
       const shortCode = await this.generateRandomShortUrl(data.origin);
-      const shortUrl = `${baseUrl}/r/${shortCode}`;
-      data.url = shortUrl;
+      newShortUrl = `${baseUrl}/r/${shortCode}`;
+      data.shortCode = shortCode;
     }
 
     const updated = { ...url, ...data };
@@ -199,6 +202,12 @@ export class UrlsService {
     this.logger.info(`URL updated successfully: id=${id} user=${userId}`, {
       context: UrlsService.name,
     });
+
+    if (newShortUrl) {
+      saved.url = newShortUrl;
+    } else if (!saved.url) {
+      saved.url = `${baseUrl}/r/${saved.shortCode}`;
+    }
 
     return saved;
   }
