@@ -60,7 +60,7 @@
     "reflect-metadata": "^0.2.2",
     "request-ip": "^3.3.0",
     "rxjs": "^7.8.1",
-    "strip-ansi": "^7.1.0",
+    "strip-ansi": "6.0.1",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.16",
     "winston": "^3.17.0"
@@ -88,6 +88,9 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3"
+  },
+  "resolutions": {
+    "strip-ansi": "6.0.1"
   },
   "jest": {
     "moduleFileExtensions": [

@@ -107,9 +107,9 @@ export class AuthenticationService {
     };
 
     return {
-      accessToken: this.jwt.sign(payload, {
+      accessToken: this.jwt.sign(payload as any, {
         secret: jwtSecret,
-        expiresIn: jwtExpirationTime,
+        expiresIn: jwtExpirationTime as any,
       }),
     };
   }
