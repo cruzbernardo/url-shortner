@@ -10,5 +10,6 @@ import { JwtService } from '@nestjs/jwt';
   imports: [TypeOrmModule.forFeature([Url])],
   controllers: [UrlsController],
   providers: [UrlsService, EncryptionService, JwtService],
+  exports: [UrlsService],
 })
 export class UrlsModule {}

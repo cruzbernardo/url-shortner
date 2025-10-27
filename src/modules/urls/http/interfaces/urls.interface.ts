@@ -7,12 +7,14 @@ export interface RequestRegisterUrl {
 export interface RequestUpdateUrl {
   origin?: string;
   url?: string;
+  shortCode?: string;
   count?: number;
 }
 
 export interface ResponseGetUrl {
   id: string;
   origin?: string;
+  shortCode?: string;
   url?: string;
   count?: number;
   createdAt: Date;

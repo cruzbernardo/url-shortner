@@ -9,9 +9,9 @@ import {
   Put,
   Param,
   Delete,
-  Res,
   UseGuards,
   Inject,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import type {
@@ -25,10 +25,8 @@ import {
   UpdateUrlDocs,
   DeleteUrlDocs,
   GetUrlByIdDocs,
-  GetUrlRedirectDocs,
 } from './http/docs';
 import { RegisterUrlModel, UpdateUrlModel } from './http/models/urls.model';
-import type { Response } from 'express';
 import { Public } from 'src/shared/validators/decorators';
 import { TokenAuthGuard } from 'src/shared/guards/toke-auth.guard';
 import { Logger } from 'winston';
@@ -95,7 +93,7 @@ export class UrlsController {
   @Put(':id')
   @UpdateUrlDocs()
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 400 })) id: string,
     @Body() body: UpdateUrlModel,
     @Req() request: UserRequestWithData,
   ) {
@@ -120,46 +118,12 @@ export class UrlsController {
     return result;
   }
 
-  @Delete(':id')
-  @DeleteUrlDocs()
-  @HttpCode(204)
-  async delete(
-    @Param('id') id: string,
-    @Req() request: UserRequestWithData,
-  ): Promise<void> {
-    this.logger.info(
-      `DELETE /urls/${id} - Delete request from user ${request.user.id}`,
-      { context: UrlsController.name },
-    );
-
-    await this.urlsService.delete(id, request.user.id);
-
-    this.logger.info(
-      `DELETE /urls/${id} - Delete successful for user ${request.user.id}`,
-      { context: UrlsController.name },
-    );
-  }
-
-  @Get('/redirect')
-  @GetUrlRedirectDocs()
-  async redirect(@Query('url') url: string, @Res() res: Response) {
-    this.logger.info(
-      `GET /urls/redirect - Redirect requested for short url: ${url}`,
-      { context: UrlsController.name },
-    );
-
-    const origin = await this.urlsService.getByUrl(url);
-
-    this.logger.info(`GET /urls/redirect - Redirecting to origin: ${origin}`, {
-      context: UrlsController.name,
-    });
-
-    return res.redirect(origin);
-  }
-
   @Get(':id')
   @GetUrlByIdDocs()
-  async getById(@Param('id') id: string, @Req() request: UserRequestWithData) {
+  async getById(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 400 })) id: string,
+    @Req() request: UserRequestWithData,
+  ) {
     this.logger.info(
       `GET /urls/${id} - GetById requested from user ${request.user.id}`,
       { context: UrlsController.name },
@@ -173,5 +137,25 @@ export class UrlsController {
     );
 
     return result;
+  }
+
+  @Delete(':id')
+  @DeleteUrlDocs()
+  @HttpCode(204)
+  async delete(
+    @Param('id', new ParseUUIDPipe({ errorHttpStatusCode: 400 })) id: string,
+    @Req() request: UserRequestWithData,
+  ): Promise<void> {
+    this.logger.info(
+      `DELETE /urls/${id} - Delete request from user ${request.user.id}`,
+      { context: UrlsController.name },
+    );
+
+    await this.urlsService.delete(id, request.user.id);
+
+    this.logger.info(
+      `DELETE /urls/${id} - Delete successful for user ${request.user.id}`,
+      { context: UrlsController.name },
+    );
   }
 }

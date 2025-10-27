@@ -18,9 +18,24 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "migration:create": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli migration:create ./src/database/migrations/$npm_config_name",
     "migration:run": "npm run build && NODE_ENV=local npm run typeorm migration:run -- -d ./src/database/datasource.ts",
-    "migration:revert": "npm run build && NODE_ENV=local npm run typeorm migration:revert -- -d ./src/database/datasource.ts"
+    "migration:revert": "npm run build && NODE_ENV=local npm run typeorm migration:revert -- -d ./src/database/datasource.ts",
+    "docker:exec": "docker compose exec api",
+    "docker:migration:create": "docker compose exec api npm run migration:create --name",
+    "docker:migration:run": "docker compose exec api npm run migration:run",
+    "docker:migration:revert": "docker compose exec api npm run migration:revert",
+    "docker:test": "docker compose exec api npm test",
+    "docker:test:watch": "docker compose exec api npm run test:watch",
+    "docker:test:cov": "docker compose exec api npm run test:cov",
+    "docker:test:e2e": "docker compose exec api npm run test:e2e",
+    "docker:lint": "docker compose exec api npm run lint",
+    "docker:format": "docker compose exec api npm run format",
+    "docker:build": "docker compose exec api npm run build",
+    "docker:restart": "docker compose restart api",
+    "docker:logs": "docker compose logs -f api",
+    "docker:shell": "docker compose exec api sh"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
@@ -89,6 +104,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   }
 }

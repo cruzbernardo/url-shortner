@@ -40,6 +40,13 @@ describe('IneligibleExceptionFilter', () => {
     switchToWs: jest.fn(),
   };
 
+  const mockLogger = {
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+  };
+
   const mockedDate = new Date(2023, 5, 1, 0, 0, 0, 0);
   beforeAll(() => {
     jest.useFakeTimers().setSystemTime(mockedDate);
@@ -48,7 +55,13 @@ describe('IneligibleExceptionFilter', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [HttpExceptionFilter],
+      providers: [
+        HttpExceptionFilter,
+        {
+          provide: 'winston',
+          useValue: mockLogger,
+        },
+      ],
     }).compile();
 
     service = module.get<HttpExceptionFilter>(HttpExceptionFilter);
@@ -84,7 +97,7 @@ describe('IneligibleExceptionFilter', () => {
       new BadRequestException('Http exception'),
       mockUrl,
     );
-    expect(mockJson).toBeCalledWith(exeption);
+    expect(mockJson).toHaveBeenCalledWith(exeption);
   });
 
   it('Exception', () => {
@@ -92,7 +105,7 @@ describe('IneligibleExceptionFilter', () => {
     service.catch(new Error('A exception'), mockArgumentsHost);
 
     const exeption = new ExceptionModel(500, null, mockUrl);
-    expect(mockJson).toBeCalledWith(exeption);
+    expect(mockJson).toHaveBeenCalledWith(exeption);
   });
 
   it('Exception Unprocessable entity', () => {
@@ -100,6 +113,6 @@ describe('IneligibleExceptionFilter', () => {
     service.catch({ response: {} }, mockArgumentsHost);
 
     const exeption = new ExceptionModel(422, { response: {} }, mockUrl);
-    expect(mockJson).toBeCalledWith(exeption);
+    expect(mockJson).toHaveBeenCalledWith(exeption);
   });
 });

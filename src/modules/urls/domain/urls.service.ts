@@ -54,12 +54,12 @@ export class UrlsService {
     });
 
     const shortCode = await this.generateRandomShortUrl(data.origin);
-    const shortUrl = `${baseUrl}/${shortCode}`;
+    const shortUrl = `${baseUrl}/r/${shortCode}`;
 
     const url = this.urlRepository.create({
       origin: data.origin,
-      url: shortUrl,
-      user: { id: userId } as User,
+      shortCode,
+      ...(userId && { user: { id: userId } as User }),
     });
 
     this.logger.info(
@@ -69,7 +69,9 @@ export class UrlsService {
       },
     );
 
-    return userId ? await this.urlRepository.save(url) : url;
+    const saved = (await this.urlRepository.save(url)) as Url;
+    saved.url = shortUrl;
+    return saved;
   }
 
   async getById(id: string, userId: string): Promise<ResponseGetUrl> {
@@ -98,25 +100,26 @@ export class UrlsService {
     return found;
   }
 
-  async getByUrl(shortUrl: string): Promise<string> {
-    this.logger.debug(`Fetching original URL for short URL: ${shortUrl}`, {
+  async getByShortCode(shortCode: string): Promise<string> {
+    this.logger.debug(`Fetching original URL for short URL: ${shortCode}`, {
       context: UrlsService.name,
     });
 
-    const url = await this.urlRepository.findOne({ where: { url: shortUrl } });
+    const url = await this.urlRepository.findOne({
+      where: { shortCode: shortCode },
+    });
 
     if (!url) {
-      this.logger.warn(`Short URL not found: ${shortUrl}`, {
+      this.logger.warn(`Short URL not found: ${shortCode}`, {
         context: UrlsService.name,
       });
       throw new NotFoundException('Short URL not found');
     }
 
-    url.count += 1;
-    await this.urlRepository.save(url);
+    await this.urlRepository.increment({ shortCode }, 'count', 1);
 
     this.logger.info(
-      `Redirecting short URL ${shortUrl} to origin ${url.origin}. Count incremented to ${url.count}`,
+      `Redirecting short URL ${shortCode} to origin ${url.origin}. Count incremented to ${url.count}`,
       { context: UrlsService.name },
     );
 
@@ -181,6 +184,7 @@ export class UrlsService {
 
     const url = await this.getById(id, userId);
 
+    let newShortUrl: string | undefined;
     if (data.origin && data.origin !== url.origin) {
       this.logger.info(
         `Origin changed from ${url.origin} to ${data.origin}, regenerating short URL`,
@@ -188,8 +192,8 @@ export class UrlsService {
       );
 
       const shortCode = await this.generateRandomShortUrl(data.origin);
-      const shortUrl = `${baseUrl}/${shortCode}`;
-      data.url = shortUrl;
+      newShortUrl = `${baseUrl}/r/${shortCode}`;
+      data.shortCode = shortCode;
     }
 
     const updated = { ...url, ...data };
@@ -198,6 +202,12 @@ export class UrlsService {
     this.logger.info(`URL updated successfully: id=${id} user=${userId}`, {
       context: UrlsService.name,
     });
+
+    if (newShortUrl) {
+      saved.url = newShortUrl;
+    } else if (!saved.url) {
+      saved.url = `${baseUrl}/r/${saved.shortCode}`;
+    }
 
     return saved;
   }
@@ -238,7 +248,7 @@ export class UrlsService {
       const candidate = hash.substring(i, i + sliceLength);
 
       const exists = await this.urlRepository.findOne({
-        where: { url: candidate },
+        where: { shortCode: candidate },
       });
 
       if (!exists) {

@@ -1,4 +1,9 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+} from 'typeorm';
 
 export class CreateUrlsTable1754348248912 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -20,7 +25,7 @@ export class CreateUrlsTable1754348248912 implements MigrationInterface {
             isNullable: false,
           },
           {
-            name: 'url',
+            name: 'short_code',
             type: 'varchar',
             isUnique: true,
             isNullable: false,

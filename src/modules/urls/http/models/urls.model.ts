@@ -6,7 +6,9 @@ import {
   IsString,
   IsUrl,
   Min,
+  MaxLength,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import type { PaginationMetadata } from 'src/shared/interfaces';
 import {
   RequestRegisterUrl,
@@ -15,30 +17,72 @@ import {
   ResponseListUrls,
 } from '../interfaces/urls.interface';
 import { PaginationMetadataModel } from 'src/shared/models/pagination.model';
+import { IsSafeUrl } from '../validators';
 
 export class RegisterUrlModel implements RequestRegisterUrl {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
+  @ApiProperty({
+    description: 'URL original que será encurtada',
+    example: 'https://www.exemplo.com.br/pagina-muito-longa',
+  })
+  @IsNotEmpty({ message: 'A URL de origem é obrigatória.' })
+  @IsString({ message: 'A URL de origem deve ser uma string.' })
+  @IsUrl(
+    {
+      protocols: ['http', 'https'],
+      require_protocol: true,
+    },
+    { message: 'A URL de origem deve ser uma URL válida (http ou https).' },
+  )
+  @MaxLength(2048, {
+    message: 'A URL de origem não pode ter mais de 2048 caracteres.',
+  })
+  @IsSafeUrl({
+    message:
+      'A URL fornecida não é válida ou contém elementos inseguros. Use apenas URLs HTTP/HTTPS públicas.',
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   origin: string;
 }
 
 export class UpdateUrlModel implements RequestUpdateUrl {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Nova URL original',
+    example: 'https://www.exemplo.com.br/nova-pagina',
+  })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'A URL de origem deve ser uma string.' })
+  @IsUrl(
+    {
+      protocols: ['http', 'https'],
+      require_protocol: true,
+    },
+    { message: 'A URL de origem deve ser uma URL válida (http ou https).' },
+  )
+  @MaxLength(2048, {
+    message: 'A URL de origem não pode ter mais de 2048 caracteres.',
+  })
+  @IsSafeUrl({
+    message:
+      'A URL fornecida não é válida ou contém elementos inseguros. Use apenas URLs HTTP/HTTPS públicas.',
+  })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   origin?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'URL encurtada completa (gerada automaticamente)',
+  })
   @IsOptional()
-  @IsString()
-  @IsUrl()
+  @IsString({ message: 'A URL deve ser uma string.' })
+  @IsUrl({}, { message: 'A URL deve ser uma URL válida.' })
   url?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Contador de acessos',
+    example: 0,
+  })
   @IsOptional()
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: 'O contador deve ser um número inteiro.' })
+  @Min(0, { message: 'O contador não pode ser negativo.' })
   count?: number;
 }
 
@@ -48,6 +92,9 @@ export class GetUrlModel implements ResponseGetUrl {
 
   @ApiProperty()
   origin: string;
+
+  @ApiProperty()
+  shortCode: string;
 
   @ApiProperty()
   url: string;
@@ -68,6 +115,7 @@ export class GetUrlModel implements ResponseGetUrl {
     return {
       id: this.id,
       origin: this.origin,
+      shortCode: this.shortCode,
       url: this.url,
       count: this.count,
       createdAt: this.createdAt,

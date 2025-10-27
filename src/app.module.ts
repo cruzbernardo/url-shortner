@@ -13,6 +13,8 @@ import { ClsModule } from 'nestjs-cls';
 import { TraceInterceptor } from './shared/interceptors/trace.interceptor';
 import { HttpExceptionFilter } from './shared/exceptions';
 import { LoggingModule } from './shared/modules/logging.module';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -33,8 +35,9 @@ import { LoggingModule } from './shared/modules/logging.module';
     AuthenticationModule,
     LoggingModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
+    AppService,
     HttpExceptionFilter,
     {
       provide: APP_GUARD,
