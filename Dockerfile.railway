@@ -8,7 +8,7 @@ COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies for build)
 # Using npm install instead of npm ci due to resolutions field
-RUN npm install && npm cache clean --force
+RUN npm install --legacy-peer-deps && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -26,7 +26,7 @@ COPY package*.json ./
 
 # Install only production dependencies
 # Using npm install instead of npm ci due to resolutions field
-RUN npm install --only=production && npm cache clean --force
+RUN npm install --only=production --legacy-peer-deps && npm cache clean --force
 
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
