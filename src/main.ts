@@ -11,7 +11,14 @@ async function bootstrap() {
     logger: WinstonModule.createLogger({ instance }),
   });
 
-  app.enableCors({ origin: '*' });
+  const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+    : ['http://localhost:5173', 'http://localhost:3000'];
+
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
 
   enableSwaggerConfig(app);
 
