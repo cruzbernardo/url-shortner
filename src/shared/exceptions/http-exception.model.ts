@@ -1,7 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Utils } from '../utils';
 
-
 export class HttpExceptionModel {
   @ApiProperty()
   statusCode: number;

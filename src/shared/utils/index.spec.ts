@@ -1,4 +1,3 @@
-
 import { Utils } from '.';
 
 describe('Utils', () => {
