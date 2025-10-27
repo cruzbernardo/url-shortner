@@ -35,11 +35,14 @@
     "docker:build": "docker compose exec api npm run build",
     "docker:restart": "docker compose restart api",
     "docker:logs": "docker compose logs -f api",
-    "docker:shell": "docker compose exec api sh"
+    "docker:shell": "docker compose exec api sh",
+    "validate:build": "npm run build",
+    "validate:docker": "docker build -f Dockerfile.railway -t url-shortner-test ."
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
+    "axios": "^1.7.9",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.0",
