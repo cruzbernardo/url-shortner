@@ -30,6 +30,7 @@ jobs:
           context: .
           file: ./Dockerfile.railway
           push: false
+          load: true
           tags: url-shortner-ci:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
