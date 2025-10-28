@@ -13,7 +13,6 @@ describe('UrlsService', () => {
   let service: UrlsService;
   let urlRepository: jest.Mocked<Repository<Url>>;
   let encryptionService: jest.Mocked<EncryptionService>;
-  let configService: jest.Mocked<ConfigService>;
   let logger: jest.Mocked<Logger>;
 
   const mockLogger = {
@@ -66,7 +65,6 @@ describe('UrlsService', () => {
     service = module.get<UrlsService>(UrlsService);
     urlRepository = module.get(getRepositoryToken(Url));
     encryptionService = module.get(EncryptionService);
-    configService = module.get(ConfigService);
     logger = module.get('winston');
 
     // Setup default config
@@ -184,7 +182,7 @@ describe('UrlsService', () => {
       mockUrlRepository.create.mockReturnValue(mockUrl);
       mockUrlRepository.save.mockResolvedValue(mockUrl);
 
-      const result = await service.register({ origin }, baseUrl, 'user-123');
+      await service.register({ origin }, baseUrl, 'user-123');
 
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining('Could not generate unique short URL'),

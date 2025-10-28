@@ -3,12 +3,11 @@ import {
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 
 @ValidatorConstraint({ async: false })
 export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
-  validate(url: string, args: ValidationArguments) {
+  validate(url: string) {
     if (!url || typeof url !== 'string') {
       return false;
     }
@@ -63,13 +62,13 @@ export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
     }
   }
 
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage() {
     return 'A URL fornecida não é válida ou contém elementos inseguros. Use apenas URLs HTTP/HTTPS públicas.';
   }
 }
 
 export function IsSafeUrl(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

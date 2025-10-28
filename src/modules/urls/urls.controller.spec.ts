@@ -6,7 +6,6 @@ import { JwtService } from '@nestjs/jwt';
 
 describe('UrlsController', () => {
   let controller: UrlsController;
-  let service: UrlsService;
 
   const mockUrlsService = {
     register: jest.fn(),
@@ -57,7 +56,6 @@ describe('UrlsController', () => {
     }).compile();
 
     controller = module.get<UrlsController>(UrlsController);
-    service = module.get<UrlsService>(UrlsService);
   });
 
   afterEach(() => {

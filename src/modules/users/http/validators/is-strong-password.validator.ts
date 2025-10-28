@@ -3,14 +3,13 @@ import {
   ValidationOptions,
   ValidatorConstraint,
   ValidatorConstraintInterface,
-  ValidationArguments,
 } from 'class-validator';
 
 @ValidatorConstraint({ async: false })
 export class IsStrongPasswordConstraint
   implements ValidatorConstraintInterface
 {
-  validate(password: string, args: ValidationArguments) {
+  validate(password: string) {
     if (!password || typeof password !== 'string') {
       return false;
     }
@@ -43,13 +42,13 @@ export class IsStrongPasswordConstraint
     return true;
   }
 
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage() {
     return 'A senha deve ter no mínimo 8 caracteres, incluindo pelo menos uma letra maiúscula, uma minúscula, um número e um caractere especial.';
   }
 }
 
 export function IsStrongPassword(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,
