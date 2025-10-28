@@ -11,7 +11,7 @@ export class HealthController {
 
   @Get('')
   @Public()
-  @SkipThrottle()
+  @SkipThrottle({ short: true, medium: true, long: true })
   async check() {
     return this.healthService.getStatusApi();
   }
