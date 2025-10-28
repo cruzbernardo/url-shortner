@@ -5,6 +5,7 @@ import { instance } from './config/winston-logger';
 import { enableSwaggerConfig } from './config/swagger-config';
 import { CustomValidationPipe } from './shared/pipes';
 import { HttpExceptionFilter } from './shared/exceptions';
+import { SanitizePipe } from './shared/pipes/sanitize.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -25,6 +26,8 @@ async function bootstrap() {
   const httpExceptionFilter = app.get(HttpExceptionFilter);
   app.useGlobalFilters(httpExceptionFilter);
 
+  // Security: Sanitize inputs first, then validate
+  app.useGlobalPipes(new SanitizePipe());
   app.useGlobalPipes(CustomValidationPipe);
 
   await app.listen(process.env.PORT ?? 3000);
