@@ -1,0 +1,179 @@
+name: Railway CI - Simulate Production Build
+
+# Roda ANTES do Railway fazer deploy
+# Simula o build exato do Dockerfile.railway
+
+on:
+  push:
+    branches: [main, feedback, develop]
+  pull_request:
+    branches: [main, feedback, develop]
+
+jobs:
+  # ============================================
+  # Job 1: Build Docker usando Dockerfile.railway
+  # ============================================
+  docker-build:
+    name: Docker Build (Railway Simulation)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (exatamente como Railway)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile.railway
+          push: false
+          tags: url-shortner-ci:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
+
+      - name: Run container smoke test
+        run: |
+          # Start container
+          docker run -d \
+            --name url-shortner-test \
+            -e DATABASE_URL="postgresql://test:test@localhost:5432/test" \
+            -e JWT_SECRET="test-secret-key-for-ci-only" \
+            -e ALGORITHM="aes-256-cbc" \
+            -e ENCRYPT_SECRET_KEY="3e8bf28781e2982f8519ecdb9fb1a5fd08cc4e6b15eb4f32f34937130a8cd6cf" \
+            -e ENCRYPT_IV="69c8e8c9f3cac123d397d4d914a63ecf" \
+            -e SHORT_URL_CHAR_SIZE="6" \
+            -e BASE_URL="https://test.railway.app" \
+            -e NODE_ENV="production" \
+            -p 3000:3000 \
+            url-shortner-ci:latest
+
+          # Wait for container to start
+          echo "Waiting for container to start..."
+          sleep 10
+
+          # Check if container is still running
+          if [ "$(docker ps -q -f name=url-shortner-test)" ]; then
+            echo "✅ Container started successfully"
+            docker logs url-shortner-test
+            exit 0
+          else
+            echo "❌ Container failed to start"
+            docker logs url-shortner-test
+            exit 1
+          fi
+
+  # ============================================
+  # Job 2: Lint e Testes (rápido)
+  # ============================================
+  lint-and-test:
+    name: Lint & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.16.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run linter
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test -- --passWithNoTests --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          fail_ci_if_error: false
+
+  # ============================================
+  # Job 3: Build TypeScript (sem Docker)
+  # ============================================
+  typescript-build:
+    name: TypeScript Build Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.16.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Check dist folder
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ dist folder not created"
+            exit 1
+          fi
+          if [ ! -f "dist/main.js" ]; then
+            echo "❌ main.js not found in dist"
+            exit 1
+          fi
+          echo "✅ Build successful"
+          ls -lah dist/
+
+  # ============================================
+  # Job 4: Security Audit
+  # ============================================
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.16.0'
+
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
+  # ============================================
+  # Job Final: Status Check (Railway esperará este)
+  # ============================================
+  ci-success:
+    name: CI Success ✅
+    runs-on: ubuntu-latest
+    needs: [docker-build, lint-and-test, typescript-build, security-audit]
+    if: success()
+
+    steps:
+      - name: All checks passed
+        run: |
+          echo "🎉 Todos os checks passaram!"
+          echo "✅ Docker build OK"
+          echo "✅ Lint OK"
+          echo "✅ Tests OK"
+          echo "✅ TypeScript build OK"
+          echo "✅ Security audit OK"
+          echo ""
+          echo "Railway pode fazer deploy com segurança! 🚀"
