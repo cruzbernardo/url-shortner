@@ -13,6 +13,7 @@ import { Public } from 'src/shared/validators/decorators';
 import { SignInDocs, GetMeDocs } from './docs';
 import { SignIn } from './interfaces';
 import { RequestSignInModel } from './models';
+import { Throttle } from '@nestjs/throttler';
 
 import type { PartialUser, UserRequestWithData } from 'src/shared/interfaces';
 import { RegisterUserModel } from 'src/modules/users/http/models';
@@ -32,6 +33,7 @@ export class AuthenticationController {
   @Public()
   @HttpCode(200)
   @SignInDocs()
+  @Throttle({ short: { limit: 5, ttl: 60000 } }) // 5 tentativas por minuto
   async signIn(@Body() body: RequestSignInModel): Promise<SignIn> {
     this.logger.info(`Sign-in attempt for email: ${body.email}`, {
       context: AuthenticationController.name,
@@ -50,6 +52,7 @@ export class AuthenticationController {
   @Public()
   @HttpCode(201)
   @SignInDocs()
+  @Throttle({ short: { limit: 3, ttl: 3600000 } }) // 3 tentativas por hora
   async signUp(@Body() body: RegisterUserModel): Promise<SignIn> {
     this.logger.info(`Sign-up attempt for email: ${body.email}`, {
       context: AuthenticationController.name,

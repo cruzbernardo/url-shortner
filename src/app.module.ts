@@ -15,6 +15,7 @@ import { HttpExceptionFilter } from './shared/exceptions';
 import { LoggingModule } from './shared/modules/logging.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [
@@ -24,6 +25,25 @@ import { AppService } from './app.service';
       global: true,
       middleware: { mount: true },
     }),
+
+    // Rate Limiting Global
+    ThrottlerModule.forRoot([
+      {
+        name: 'short',
+        ttl: 1000, // 1 segundo
+        limit: 3, // 3 requisições por segundo
+      },
+      {
+        name: 'medium',
+        ttl: 10000, // 10 segundos
+        limit: 20, // 20 requisições por 10 segundos
+      },
+      {
+        name: 'long',
+        ttl: 60000, // 1 minuto
+        limit: 100, // 100 requisições por minuto
+      },
+    ]),
 
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -39,6 +59,10 @@ import { AppService } from './app.service';
   providers: [
     AppService,
     HttpExceptionFilter,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
     {
       provide: APP_GUARD,
       useClass: JwtGuard,
