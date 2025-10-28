@@ -8,6 +8,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Url, User } from 'src/database/entities';
 import { EncryptionService } from 'src/shared/utils/encryption.service';
+import { OrderENUM } from 'src/shared/constants/pagination';
 
 describe('UrlsService', () => {
   let service: UrlsService;
@@ -138,7 +139,6 @@ describe('UrlsService', () => {
       expect(urlRepository.create).toHaveBeenCalledWith({
         origin,
         shortCode: mockShortCode,
-        user: { id: undefined },
       });
       // FIXED: Now saves URLs for anonymous users correctly
       expect(urlRepository.save).toHaveBeenCalledWith(mockUrl);
@@ -371,7 +371,7 @@ describe('UrlsService', () => {
       );
 
       const result = await service.list(
-        { page: 1, itemsPerPage: 10, order: 'ASC' },
+        { page: 1, itemsPerPage: 10, order: OrderENUM.ASC },
         userId,
       );
 

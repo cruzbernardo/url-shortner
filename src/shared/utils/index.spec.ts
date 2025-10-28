@@ -8,11 +8,12 @@ describe('Utils', () => {
     });
 
     it('should be return a valid Date when a called with paramenter', () => {
-      const mock = new Date(2023, 5, 1, 0, 0, 0, 0);
+      const inputDate = '2023-06-01T03:00:00.000Z';
+      const expectedDate = new Date(inputDate);
 
-      const date = Utils.getNewDate('2023-06-01T03:00:00.000Z');
+      const date = Utils.getNewDate(inputDate);
       expect(date).toBeInstanceOf(Date);
-      expect(date).toEqual(mock);
+      expect(date).toEqual(expectedDate);
     });
   });
 });
