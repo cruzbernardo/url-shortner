@@ -1,5 +1,5 @@
-import { Controller, Get, Param, Res, Inject } from '@nestjs/common';
-import type { Response } from 'express';
+import { Controller, Get, Param, Res, Inject, Req } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { AppService } from './app.service';
 import { UrlsService } from './modules/urls/domain/urls.service';
 import { Public } from './shared/validators/decorators';
@@ -26,13 +26,24 @@ export class AppController {
   @Get('r/:shortCode')
   @Public()
   @RedirectToOriginalUrlDocs()
-  async redirect(@Param('shortCode') shortCode: string, @Res() res: Response) {
+  async redirect(
+    @Param('shortCode') shortCode: string,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     this.logger.info(
       `GET /r/${shortCode} - Redirect requested for short code: ${shortCode}`,
       { context: AppController.name },
     );
 
-    const origin = await this.urlsService.getByShortCode(shortCode);
+    const ip = req.ip || req.socket.remoteAddress;
+    const userAgent = req.headers['user-agent'];
+
+    const origin = await this.urlsService.getByShortCode(
+      shortCode,
+      ip,
+      userAgent,
+    );
 
     this.logger.info(`GET /r/${shortCode} - Redirecting to origin: ${origin}`, {
       context: AppController.name,

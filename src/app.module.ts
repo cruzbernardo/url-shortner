@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CacheModule } from '@nestjs/cache-manager';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmConfigService } from './config/typeorm-config.service';
+import { redisConfig } from './config/redis-config';
+import { RabbitMQWrapperModule } from './modules/rabbitmq/rabbitmq.module';
 import { UsersModule } from './modules/users/users.module';
 import { HealthModule } from './modules/health';
 import { UrlsModule } from './modules/urls/urls.module';
@@ -15,7 +19,8 @@ import { HttpExceptionFilter } from './shared/exceptions';
 import { LoggingModule } from './shared/modules/logging.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './shared/guards/custom-throttler.guard';
 
 @Module({
   imports: [
@@ -30,20 +35,30 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     ThrottlerModule.forRoot([
       {
         name: 'short',
-        ttl: 1000, // 1 segundo
-        limit: 3, // 3 requisições por segundo
+        ttl: 1000,
+        limit: 3,
       },
       {
         name: 'medium',
-        ttl: 10000, // 10 segundos
-        limit: 20, // 20 requisições por 10 segundos
+        ttl: 10000,
+        limit: 20,
       },
       {
         name: 'long',
-        ttl: 60000, // 1 minuto
-        limit: 100, // 100 requisições por minuto
+        ttl: 60000,
+        limit: 100,
       },
     ]),
+
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [ConfigService],
+      useFactory: redisConfig,
+    }),
+
+    RabbitMQWrapperModule,
+
+    ScheduleModule.forRoot(),
 
     TypeOrmModule.forRootAsync({
       useClass: TypeOrmConfigService,
@@ -61,7 +76,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
     HttpExceptionFilter,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
     {
       provide: APP_GUARD,
