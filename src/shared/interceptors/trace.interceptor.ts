@@ -19,6 +19,13 @@ export class TraceInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const contextType = context.getType();
+
+    // Skip trace interception for non-HTTP contexts (RabbitMQ, WebSockets, etc.)
+    if (contextType !== 'http') {
+      return next.handle();
+    }
+
     const request = context.switchToHttp().getRequest();
 
     const traceId = request.headers['x-trace-id']?.toString() || uuidv4();

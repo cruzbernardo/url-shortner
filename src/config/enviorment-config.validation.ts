@@ -52,6 +52,19 @@ export interface IEnvironmentVariables {
 
   // Logging - Optional
   LOG_LEVEL?: string;
+
+  // Redis Configuration
+  REDIS_HOST?: string;
+  REDIS_PORT?: number;
+  REDIS_TTL?: number;
+  REDIS_URL?: string;
+
+  // RabbitMQ Configuration
+  RABBITMQ_URL?: string;
+  RABBITMQ_USER?: string;
+  RABBITMQ_PASSWORD?: string;
+  RABBITMQ_QUEUE_URL_ANALYTICS?: string;
+  RABBITMQ_EXCHANGE_ANALYTICS?: string;
 }
 
 export class EnvironmentVariables implements IEnvironmentVariables {
@@ -182,6 +195,50 @@ export class EnvironmentVariables implements IEnvironmentVariables {
   @IsIn(['error', 'warn', 'info', 'debug', 'verbose'])
   @IsOptional()
   LOG_LEVEL: string = 'info';
+
+  // ============================================
+  // REDIS - Optional (for caching)
+  // ============================================
+  @IsString()
+  @IsOptional()
+  REDIS_HOST?: string = 'redis';
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  REDIS_PORT?: number = 6379;
+
+  @IsInt()
+  @IsPositive()
+  @IsOptional()
+  REDIS_TTL?: number = 3600;
+
+  @IsString()
+  @IsOptional()
+  REDIS_URL?: string;
+
+  // ============================================
+  // RABBITMQ - Optional (for event-driven architecture)
+  // ============================================
+  @IsString()
+  @IsOptional()
+  RABBITMQ_URL?: string;
+
+  @IsString()
+  @IsOptional()
+  RABBITMQ_USER?: string = 'admin';
+
+  @IsString()
+  @IsOptional()
+  RABBITMQ_PASSWORD?: string = 'admin';
+
+  @IsString()
+  @IsOptional()
+  RABBITMQ_QUEUE_URL_ANALYTICS?: string = 'url-analytics';
+
+  @IsString()
+  @IsOptional()
+  RABBITMQ_EXCHANGE_ANALYTICS?: string = 'analytics';
 }
 
 export const validateEnvironment = (
