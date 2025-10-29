@@ -63,6 +63,7 @@
     "class-sanitizer": "^1.0.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "keyv": "^5.5.3",
     "nest-winston": "^1.10.2",
     "nestjs-cls": "^6.0.1",
     "passport": "^0.7.0",

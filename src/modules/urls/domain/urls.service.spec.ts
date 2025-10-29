@@ -2,13 +2,14 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { UrlsService } from './urls.service';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { ConfigService } from '@nestjs/config';
 import { NotFoundException } from '@nestjs/common';
 import { Logger } from 'winston';
 import { Url, User } from 'src/database/entities';
 import { EncryptionService } from 'src/shared/utils/encryption.service';
 import { OrderENUM } from 'src/shared/constants/pagination';
+import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 
 describe('UrlsService', () => {
   let service: UrlsService;
@@ -29,6 +30,7 @@ describe('UrlsService', () => {
 
   const mockConfigService = {
     getOrThrow: jest.fn(),
+    get: jest.fn(),
   };
 
   const mockUrlRepository = {
@@ -38,6 +40,18 @@ describe('UrlsService', () => {
     createQueryBuilder: jest.fn(),
     softDelete: jest.fn(),
     increment: jest.fn(),
+  };
+
+  const mockCacheManager = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+    reset: jest.fn(),
+  };
+
+  const mockAmqpConnection = {
+    publish: jest.fn(),
+    request: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -60,6 +74,14 @@ describe('UrlsService', () => {
           provide: 'winston',
           useValue: mockLogger,
         },
+        {
+          provide: CACHE_MANAGER,
+          useValue: mockCacheManager,
+        },
+        {
+          provide: AmqpConnection,
+          useValue: mockAmqpConnection,
+        },
       ],
     }).compile();
 
@@ -70,6 +92,15 @@ describe('UrlsService', () => {
 
     // Setup default config
     mockConfigService.getOrThrow.mockReturnValue(6);
+    mockConfigService.get.mockReturnValue('analytics');
+
+    // Setup default cache behavior (return null for cache miss)
+    mockCacheManager.get.mockResolvedValue(null);
+    mockCacheManager.set.mockResolvedValue(undefined);
+    mockCacheManager.del.mockResolvedValue(undefined);
+
+    // Setup default AMQP behavior (resolve successfully)
+    mockAmqpConnection.publish.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -271,7 +302,22 @@ describe('UrlsService', () => {
   describe('getByShortCode', () => {
     const shortCode = 'abc123';
 
-    it('should return origin URL and increment count atomically', async () => {
+    it('should return origin URL from cache if available', async () => {
+      const cachedUrl = 'https://example.com';
+      mockCacheManager.get.mockResolvedValue(cachedUrl);
+
+      const result = await service.getByShortCode(shortCode);
+
+      expect(mockCacheManager.get).toHaveBeenCalledWith(`url:${shortCode}`);
+      expect(result).toBe(cachedUrl);
+      expect(mockAmqpConnection.publish).toHaveBeenCalled();
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Cache HIT'),
+        expect.any(Object),
+      );
+    });
+
+    it('should fetch from DB and cache if not in cache', async () => {
       const mockUrl = {
         id: 'url-123',
         origin: 'https://example.com',
@@ -279,61 +325,48 @@ describe('UrlsService', () => {
         count: 5,
       } as Url;
 
+      mockCacheManager.get.mockResolvedValue(null); // Cache MISS
       mockUrlRepository.findOne.mockResolvedValue(mockUrl);
-      mockUrlRepository.increment.mockResolvedValue({ affected: 1, raw: [] });
 
       const result = await service.getByShortCode(shortCode);
 
+      expect(mockCacheManager.get).toHaveBeenCalledWith(`url:${shortCode}`);
       expect(urlRepository.findOne).toHaveBeenCalledWith({
         where: { shortCode },
       });
-      expect(urlRepository.increment).toHaveBeenCalledWith(
-        { shortCode },
-        'count',
-        1,
+      expect(mockCacheManager.set).toHaveBeenCalledWith(
+        `url:${shortCode}`,
+        mockUrl.origin,
+        3600000,
       );
+      expect(mockAmqpConnection.publish).toHaveBeenCalled();
       expect(result).toBe('https://example.com');
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.stringContaining('Redirecting short URL'),
-        expect.any(Object),
-      );
     });
 
     it('should throw NotFoundException when short code not found', async () => {
+      mockCacheManager.get.mockResolvedValue(null); // Cache MISS
       mockUrlRepository.findOne.mockResolvedValue(null);
 
       await expect(service.getByShortCode(shortCode)).rejects.toThrow(
         NotFoundException,
       );
-      expect(logger.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Short URL not found'),
-        expect.any(Object),
-      );
     });
 
-    it('should handle multiple concurrent increments safely', async () => {
-      // This test verifies the race condition is fixed with atomic increment
-      const mockUrl = {
-        id: 'url-123',
-        origin: 'https://example.com',
-        shortCode: shortCode,
-        count: 5,
-      } as Url;
+    it('should publish analytics event via RabbitMQ', async () => {
+      const cachedUrl = 'https://example.com';
+      mockCacheManager.get.mockResolvedValue(cachedUrl);
 
-      mockUrlRepository.findOne.mockResolvedValue(mockUrl);
-      mockUrlRepository.increment.mockResolvedValue({ affected: 1, raw: [] });
+      await service.getByShortCode(shortCode, '192.168.1.1', 'Mozilla/5.0');
 
-      // Simulate concurrent calls
-      const promises = [
-        service.getByShortCode(shortCode),
-        service.getByShortCode(shortCode),
-        service.getByShortCode(shortCode),
-      ];
-
-      await Promise.all(promises);
-
-      // With atomic increment, all 3 increments should succeed
-      expect(urlRepository.increment).toHaveBeenCalledTimes(3);
+      expect(mockAmqpConnection.publish).toHaveBeenCalledWith(
+        'analytics',
+        'url.accessed',
+        expect.objectContaining({
+          shortCode,
+          ip: '192.168.1.1',
+          userAgent: 'Mozilla/5.0',
+        }),
+      );
     });
   });
 
